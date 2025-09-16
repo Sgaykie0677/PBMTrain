@@ -77,8 +77,8 @@
     <h2>Medication & Formularies</h2>
     <div class="task">
       <h3>Task: Look up a medication</h3>
-      <p>Check a medication's status to see its type and formulary tier. Type a medication's brand name (e.g., 'Lisinopril', 'Humira', or 'Crestor') for a simulated result.</p>
-      <input type="text" id="med-lookup" placeholder="e.g., Lisinopril">
+      <p>Check a medication's status to see its type and formulary tier. Try the following brand names or their generic equivalents: **Lisinopril, Humira, Crestor, Metformin, Atorvastatin, Amlodipine**</p>
+      <input type="text" id="med-lookup" placeholder="e.g., Atorvastatin">
       <button type="button" id="med-lookup-btn">Check Medication Status</button>
       <div id="med-feedback" class="feedback"></div>
     </div>
@@ -270,7 +270,20 @@
       'Quetiapine': { brand: 'Seroquel', generic: 'Quetiapine', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
       'Aripiprazole': { brand: 'Abilify', generic: 'Aripiprazole', type: 'Generic', tier: 'Tier 3', status: 'Requires PA' },
       'Montelukast': { brand: 'Singulair', generic: 'Montelukast', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
-      'Lisinopril-HCTZ': { brand: 'Zestoretic', generic: 'Lisinopril-Hydrochlorothiazide', type: 'Generic', tier: 'Tier 1', status: 'Covered' }
+      'Lisinopril-HCTZ': { brand: 'Zestoretic', generic: 'Lisinopril-Hydrochlorothiazide', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Rosuvastatin': { brand: 'Crestor', generic: 'Rosuvastatin', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
+      'Pantoprazole': { brand: 'Protonix', generic: 'Pantoprazole', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Escitalopram': { brand: 'Lexapro', generic: 'Escitalopram', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Loratadine': { brand: 'Claritin', generic: 'Loratadine', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Tramadol': { brand: 'Ultram', generic: 'Tramadol', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
+      'Trazodone': { brand: 'Desyrel', generic: 'Trazodone', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Furosemide': { brand: 'Lasix', generic: 'Furosemide', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Doxycycline': { brand: 'Vibramycin', generic: 'Doxycycline', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Citalopram': { brand: 'Celexa', generic: 'Citalopram', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Tamsulosin': { brand: 'Flomax', generic: 'Tamsulosin', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Clonazepam': { brand: 'Klonopin', generic: 'Clonazepam', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
+      'Glimepiride': { brand: 'Amaryl', generic: 'Glimepiride', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Meloxicam': { brand: 'Mobic', generic: 'Meloxicam', type: 'Generic', tier: 'Tier 1', status: 'Covered' }
     },
     medicationTypes: {
       'Atorvastatin': 'Generic',
@@ -280,7 +293,9 @@
       'Lisinopril': 'Generic',
       'Zestril': 'Brand',
       'Amoxicillin': 'Generic',
-      'Amoxil': 'Brand'
+      'Amoxil': 'Brand',
+      'Amlodipine': 'Generic',
+      'Norvasc': 'Brand'
     },
     inquiryScenarios: [
       {
@@ -521,7 +536,7 @@
       feedbackEl.classList.remove('error');
       updateProgress('medication');
     } else {
-      feedbackEl.textContent = "Medication not found in formulary. Try another.";
+      feedbackEl.textContent = "Medication not found in formulary. Try another. For example, Amlodipine, Lipitor, or Metformin.";
       feedbackEl.classList.add('error');
       feedbackEl.classList.remove('success');
     }
