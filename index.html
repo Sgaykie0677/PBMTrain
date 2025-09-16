@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PBM Training Notebook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f8f9ff; }
+    header { background: #006d77; color: #fff; padding: 1rem 2rem; font-size: 2rem; letter-spacing: .03em; font-weight: bold; }
+    nav { background: #edf6f9; padding: 0.5rem 2rem; display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    nav button { background: #00b4d8; color: #fff; border: none; border-radius: 5px; padding: 0.4rem 1.2rem; margin: 0.1rem; cursor: pointer; transition: background 0.2s; }
+    nav button:hover, nav button.active { background: #03045e; }
+    main { max-width: 900px; margin: 2rem auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 16px #b5c8e6a1; padding: 2rem; }
+    section { display: none; }
+    section.active { display: block; }
+    h2 { font-size: 1.5rem; font-weight: 600; color: #006d77; margin-bottom: 1rem; border-bottom: 2px solid #e0f2fe; padding-bottom: 0.5rem; }
+    .task { background: #f0f4ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d0e0ff; }
+    .task p { margin: 0.5rem 0; color: #333; }
+    .task h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #03045e; }
+    input[type="text"], input[type="date"], select, textarea { width: 100%; max-width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 5px; margin-top: 0.5rem; box-sizing: border-box; }
+    button { background: #48bfe3; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 5px; cursor: pointer; transition: background 0.2s; margin-top: 1rem; }
+    button:hover { background: #00b4d8; }
+    .feedback { margin-top: 1rem; padding: 0.75rem; border-radius: 5px; display: none; }
+    .feedback.success { background: #e6ffed; color: #2f855a; border: 1px solid #c6f6d5; }
+    .feedback.error { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #e2e8f0; padding: 0.75rem; text-align: left; }
+    th { background: #edf2f7; font-weight: 600; }
+    progress { width: 100%; max-width: 400px; height: 1rem; }
+    .terminology-item { margin-bottom: 1rem; padding: 0.5rem; background: #f9fafb; border-left: 4px solid #00b4d8; }
+    .scenario-buttons button { background-color: #f1f5f9; color: #333; margin: 0.2rem; transition: background-color 0.2s; }
+    .scenario-buttons button:hover { background-color: #e2e8f0; }
+    .scenario-buttons button.correct { background-color: #22c55e; color: white; }
+    .scenario-buttons button.incorrect { background-color: #ef4444; color: white; }
+    .scenario-feedback { margin-top: 1rem; padding: 0.75rem; border-radius: 5px; background: #f0f4ff; border: 1px solid #d0e0ff; display: none; }
+  </style>
+</head>
+<body>
+
+<header>PBM Training Notebook</header>
+<nav>
+  <button data-module="pbmbasics" class="active">PBM Basics</button>
+  <button data-module="medication">Medication & Formularies</button>
+  <button data-module="inquiries">Clinical Triage</button>
+  <button data-module="priorAuth">Prior Authorization</button>
+  <button data-module="cs_scenarios">Customer Service Scenarios</button>
+  <button data-module="hipaa">HIPAA & Privacy</button>
+  <button data-module="career">Career Path Tracker</button>
+</nav>
+<main>
+  <!-- PBM Basics & Terminology Module -->
+  <section id="pbmbasics-module" class="active">
+    <h2>PBM Basics & Terminology</h2>
+    <div class="task">
+      <h3>What is a PBM?</h3>
+      <p>A **Pharmacy Benefit Manager (PBM)** is a third-party administrator that manages prescription drug programs for health plans. They negotiate with drug manufacturers and pharmacies to control costs and improve drug accessibility. A PBM's primary role is to act as an intermediary between health plans and pharmaceutical companies to create a seamless prescription process for members. </p>
+    </div>
+    <div class="task">
+      <h3>Common Terminology</h3>
+      <p>Type a term below to get its definition. Try the examples provided: **PBM, Formulary, EOB, Claim Denial, Co-insurance**</p>
+      <input type="text" id="termInput" placeholder="e.g., PBM, Formulary, EOB">
+      <button onclick="lookupTerm()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+            Look Up Term
+        </button>
+        <div id="result" class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200 text-left transition-all duration-300 ease-in-out">
+            <h2 class="text-xl font-semibold text-gray-700">Definition will appear here.</h2>
+            <p class="text-gray-600 mt-2">
+                This section will display the definition of the term you search for.
+            </p>
+        </div>
+    </div>
+  </section>
+
+  <!-- Medication & Formularies Module -->
+  <section id="medication-module">
+    <h2>Medication & Formularies</h2>
+    <div class="task">
+      <h3>Task: Look up a medication</h3>
+      <p>Check a medication's status to see its type and formulary tier. Type a medication's brand name (e.g., 'Lisinopril', 'Humira', or 'Crestor') for a simulated result.</p>
+      <input type="text" id="med-lookup" placeholder="e.g., Lisinopril">
+      <button type="button" id="med-lookup-btn">Check Medication Status</button>
+      <div id="med-feedback" class="feedback"></div>
+    </div>
+    <div class="task">
+      <h3>Task: Generic vs. Brand</h3>
+      <p>Identify whether a given medication is a generic or a brand name. Try the following medications: **Atorvastatin, Lipitor, Zocor, Simvastatin**</p>
+      <input type="text" id="generic-brand-lookup" placeholder="e.g., Atorvastatin">
+      <button type="button" id="generic-brand-btn">Identify Type</button>
+      <div id="generic-brand-feedback" class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- Clinical vs. Non-Clinical Inquiries Module -->
+  <section id="inquiries-module">
+    <h2>Clinical vs. Non-Clinical Inquiries</h2>
+    <div class="task">
+      <h3>Task: Triage a Member's Call</h3>
+      <p>Read the member's inquiry and decide if it's a clinical or non-clinical issue. Select the appropriate action from the options below.</p>
+      <div id="inquiry-scenario-container">
+        <!-- Scenarios populated by JS -->
+      </div>
+      <div id="inquiry-feedback" class="scenario-feedback"></div>
+    </div>
+  </section>
+
+  <!-- Prior Authorization & Step Therapy Module -->
+  <section id="priorAuth-module">
+    <h2>Prior Authorization & Step Therapy</h2>
+    <div class="task">
+      <h3>Task: Submit a Prior Authorization Request</h3>
+      <p>Submit a PA request for a member. The member needs Humira, a specialty medication. You must confirm the member's ID and that the correct form is submitted. The correct member ID is **PA789**.</p>
+      <form id="priorAuth-form">
+        <label>Member ID: <input type="text" id="pa-member-id" placeholder="e.g., PA789"></label>
+        <label>Medication: <input type="text" id="pa-medication" value="Humira" readonly></label>
+        <label>Form Submitted: <input type="text" id="pa-form" placeholder="e.g., Speciality Medication Request"></label>
+        <button type="submit">Submit PA Request</button>
+      </form>
+      <div id="priorAuth-feedback" class="feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Task: PA for a New Medication</h3>
+      <p>A member needs **Aripiprazole** and their doctor has requested a PA. The correct member ID is **AR765** and the required form is **Mental Health Medication Authorization**. Submit the request to proceed.</p>
+      <form id="pa-new-med-form">
+        <label>Member ID: <input type="text" id="pa-new-med-id" placeholder="e.g., AR765"></label>
+        <label>Medication: <input type="text" id="pa-new-med-med" value="Aripiprazole" readonly></label>
+        <label>Form Submitted: <input type="text" id="pa-new-med-form" placeholder="e.g., Mental Health Medication Authorization"></label>
+        <button type="submit">Submit PA for Aripiprazole</button>
+      </form>
+      <div id="pa-new-med-feedback" class="feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Task: Step Therapy Scenario</h3>
+      <p>A member calls because their prescription for a brand-name medication was rejected due to a **step therapy** requirement. They don't know what this means. How should you respond?</p>
+      <p>Correct response should explain step therapy and advise the member to have their doctor prescribe a less expensive, formulary-preferred alternative first. The correct member ID is **ST2024**.</p>
+      <form id="step-therapy-form">
+        <label>Member ID: <input type="text" id="st-member-id" placeholder="e.g., ST2024"></label>
+        <textarea id="st-response" rows="4" placeholder="Explain the concept of step therapy and advise the member on the next steps."></textarea>
+        <button type="submit">Submit Response</button>
+      </form>
+      <div id="step-therapy-feedback" class="feedback"></div>
+    </div>
+  </section>
+  
+  <!-- Customer Service Scenarios Module -->
+  <section id="cs_scenarios-module">
+    <h2>Customer Service Scenarios</h2>
+    <div class="task">
+      <h3>Task: Respond to a Upset Member</h3>
+      <p>A member is upset because their prescription for a brand-name medication was rejected at the pharmacy, and they're being told to pay full price. What's the most empathetic and professional approach? The correct response involves empathy, clarifying the issue, and explaining the formulary or PA process calmly.</p>
+      <textarea id="cs-response" rows="4" placeholder="Type your professional response here..."></textarea>
+      <button type="button" id="submit-cs-response">Submit Response</button>
+      <div id="cs-feedback" class="feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Scenario: The Confused Member</h3>
+      <p>A member is calling because they received an Explanation of Benefits (**EOB**) and are confused about the 'CARC' codes and why their payment was higher than expected. They are feeling frustrated and need clarification. What is the most appropriate response?</p>
+      <textarea id="cs-response-2" rows="4" placeholder="Type your professional response here..."></textarea>
+      <button type="button" id="submit-cs-response-2">Submit Response</button>
+      <div id="cs-feedback-2" class="feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Scenario: Pharmacy Claims Inactive Insurance</h3>
+      <p>A member is calling from the pharmacy and is distressed. The pharmacy is claiming their insurance is inactive and they cannot fill their prescription. The member ID is **INACTIVE987**. How should you handle this?</p>
+      <textarea id="cs-response-3" rows="4" placeholder="Type your professional response here..."></textarea>
+      <button type="button" id="submit-cs-response-3">Submit Response</button>
+      <div id="cs-feedback-3" class="feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Scenario: Request to Fax Medication History</h3>
+      <p>A member is calling and wants a list of their past 12 months of prescription fills faxed to their doctor's office immediately. They are very rushed. What are the key steps you must follow?</p>
+      <textarea id="cs-response-4" rows="4" placeholder="Type your professional response here..."></textarea>
+      <button type="button" id="submit-cs-response-4">Submit Response</button>
+      <div id="cs-feedback-4" class="feedback"></div>
+    </div>
+  </section>
+
+  <!-- HIPAA & Privacy Module -->
+  <section id="hipaa-module">
+    <h2>HIPAA Principles & Privacy</h2>
+    <div class="task">
+      <h3>Task: Practice HIPAA Principles</h3>
+      <p>A member's spouse is calling and asking for information on a recent prescription refill. The spouse is not authorized on the account. What should you do?</p>
+      <div class="scenario-buttons">
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback')">Give them the information, as it's a family member.</button>
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback')">Give them partial information to be helpful.</button>
+        <button onclick="checkHipaaAnswer(true, 'hipaa-feedback')">Politely explain you cannot share any information without the member's explicit consent.</button>
+      </div>
+      <div id="hipaa-feedback" class="scenario-feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Task: Handling a Third-Party Request</h3>
+      <p>A doctor's office calls requesting a member's full medication history. They claim it's for treatment, but they cannot provide a signed Authorization to Release Medical Information form. How should you proceed?</p>
+      <div class="scenario-buttons">
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback-2')">Send them the history, assuming they will send the form later.</button>
+        <button onclick="checkHipaaAnswer(true, 'hipaa-feedback-2')">Inform them that you need a signed, valid authorization form before you can release any information.</button>
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback-2')">Offer to read them the history over the phone, but don't send a copy.</button>
+      </div>
+      <div id="hipaa-feedback-2" class="scenario-feedback"></div>
+    </div>
+
+    <div class="task">
+      <h3>Scenario: Information for a Family Member</h3>
+      <p>A member's adult child calls asking for information about their parent's recent prescription, including the drug name and cost. The child is not listed as an authorized contact on the account. What is the correct response?</p>
+      <div class="scenario-buttons">
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback-3')">Provide the information since they are a direct family member.</button>
+        <button onclick="checkHipaaAnswer(true, 'hipaa-feedback-3')">Explain that due to privacy regulations, you cannot share any information without explicit consent from the member.</button>
+        <button onclick="checkHipaaAnswer(false, 'hipaa-feedback-3')">Give them the information, but warn them not to share it with anyone else.</button>
+      </div>
+      <div id="hipaa-feedback-3" class="scenario-feedback"></div>
+    </div>
+  </section>
+
+  <!-- Career Path Tracker Module -->
+  <section id="career-module">
+    <h2>Career Path Tracker</h2>
+    <p class="mb-4">Track your progress through the training modules. Completing a module will update the tracker and unlock new milestones.</p>
+    <div class="task">
+      <h3>Your Progress</h3>
+      <progress id="career-progress" value="0" max="6"></progress>
+      <p><span id="progress-text">0</span> of 6 modules completed</p>
+    </div>
+    <div class="task">
+      <h3>Module Status</h3>
+      <ul id="module-status-list"></ul>
+    </div>
+    <div class="task">
+      <h3>Milestones & Certifications</h3>
+      <ul id="milestone-list"></ul>
+    </div>
+  </section>
+
+</main>
+<footer>
+  <p class="text-sm text-gray-500 text-center mt-8">&copy; 2025, Chandra M Harris</p>
+</footer>
+
+<script>
+  // --- STATE MANAGEMENT ---
+  let appState = {
+    completedModules: new Set(),
+    medicationData: {
+      'Lisinopril': { brand: 'Lisinopril', generic: 'Zestril', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Humira': { brand: 'Humira', generic: 'Adalimumab', type: 'Specialty', tier: 'Tier 4', status: 'Requires PA' },
+      'Advair': { brand: 'Advair', generic: 'Fluticasone/Salmeterol', type: 'Brand', tier: 'Tier 3', status: 'Covered with Step Therapy' },
+      'Metformin': { brand: 'Metformin', generic: 'Glucophage', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Amoxicillin': { brand: 'Amoxicillin', generic: 'Amoxil', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Omeprazole': { brand: 'Omeprazole', generic: 'Prilosec', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Crestor': { brand: 'Crestor', generic: 'Rosuvastatin', type: 'Brand', tier: 'Tier 2', status: 'Covered' },
+      'Xeljanz': { brand: 'Xeljanz', generic: 'Tofacitinib', type: 'Specialty', tier: 'Tier 4', status: 'Requires PA' },
+      'Levothyroxine': { brand: 'Synthroid', generic: 'Levothyroxine', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Atorvastatin': { brand: 'Lipitor', generic: 'Atorvastatin', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Metoprolol': { brand: 'Lopressor', generic: 'Metoprolol', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Simvastatin': { brand: 'Zocor', generic: 'Simvastatin', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Hydrocodone': { brand: 'Norco', generic: 'Hydrocodone/Acetaminophen', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
+      'Amlodipine': { brand: 'Norvasc', generic: 'Amlodipine', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Gabapentin': { brand: 'Neurontin', generic: 'Gabapentin', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Losartan': { brand: 'Cozaar', generic: 'Losartan', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Albuterol': { brand: 'ProAir HFA', generic: 'Albuterol', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Sertraline': { brand: 'Zoloft', generic: 'Sertraline', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Prednisone': { brand: 'Deltasone', generic: 'Prednisone', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Fluoxetine': { brand: 'Prozac', generic: 'Fluoxetine', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Bupropion': { brand: 'Wellbutrin', generic: 'Bupropion', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Quetiapine': { brand: 'Seroquel', generic: 'Quetiapine', type: 'Generic', tier: 'Tier 2', status: 'Covered' },
+      'Aripiprazole': { brand: 'Abilify', generic: 'Aripiprazole', type: 'Generic', tier: 'Tier 3', status: 'Requires PA' },
+      'Montelukast': { brand: 'Singulair', generic: 'Montelukast', type: 'Generic', tier: 'Tier 1', status: 'Covered' },
+      'Lisinopril-HCTZ': { brand: 'Zestoretic', generic: 'Lisinopril-Hydrochlorothiazide', type: 'Generic', tier: 'Tier 1', status: 'Covered' }
+    },
+    medicationTypes: {
+      'Atorvastatin': 'Generic',
+      'Lipitor': 'Brand',
+      'Zocor': 'Brand',
+      'Simvastatin': 'Generic',
+      'Lisinopril': 'Generic',
+      'Zestril': 'Brand',
+      'Amoxicillin': 'Generic',
+      'Amoxil': 'Brand'
+    },
+    inquiryScenarios: [
+      {
+        question: "A member is asking if their new medication, Crestor, is safe to take with their current heart medication, Lipitor.",
+        type: "Clinical",
+        hint: "This is a drug interaction question.",
+        options: [
+          { text: "Advise them that it's okay and proceed.", correct: false },
+          { text: "Transfer the call to a pharmacist or nurse.", correct: true },
+          { text: "Ask them to look it up on the internet.", correct: false }
+        ]
+      },
+      {
+        question: "A member is confused about their most recent bill and is asking what a 'deductible' is.",
+        type: "Non-Clinical",
+        hint: "This is a billing and terminology question.",
+        options: [
+          { text: "Explain what a deductible is and how it affects their cost.", correct: true },
+          { text: "Transfer the call to a nurse immediately.", correct: false },
+          { text: "Tell them you don't handle billing.", correct: false }
+        ]
+      },
+      {
+        question: "A member's pharmacy told them their prescription for an antibiotic is out of refills.",
+        type: "Non-Clinical",
+        hint: "This is a refill and prescription management question.",
+        options: [
+          { text: "Tell them to ask their doctor for a new prescription.", correct: true },
+          { text: "Prescribe them more refills yourself.", correct: false },
+          { text: "Transfer them to the clinical team.", correct: false }
+        ]
+      },
+      {
+        question: "A member is asking if their prior authorization for a specialty medication has been approved yet.",
+        type: "Non-Clinical",
+        hint: "This is a status check on a PA. Do not give clinical advice.",
+        options: [
+          { text: "Tell them the status of their PA and what the next steps are.", correct: true },
+          { text: "Transfer them to a pharmacist to discuss the PA.", correct: false },
+          { text: "Tell them to call their doctor for an update.", correct: false }
+        ]
+      },
+      {
+        question: "A member is reporting a severe rash after starting a new medication and is asking if this is a normal side effect.",
+        type: "Clinical",
+        hint: "This is a potential adverse drug reaction.",
+        options: [
+          { text: "Tell them to stop the medication immediately.", correct: false },
+          { text: "Transfer the call to a pharmacist or nurse.", correct: true },
+          { text: "Advise them to wait and see if it gets better.", correct: false }
+        ]
+      },
+      {
+        question: "A member received a bill for a prescription and is asking why it wasn't covered by their insurance.",
+        type: "Non-Clinical",
+        hint: "This is a billing and claims question.",
+        options: [
+          { text: "Explain the reason for the claim denial (e.g., non-formulary, deductible not met).", correct: true },
+          { text: "Tell them the pharmacy made a mistake.", correct: false },
+          { text: "Transfer the call to the clinical team.", correct: false }
+        ]
+      },
+      {
+        question: "A member is asking if their child can take a specific over-the-counter allergy medication, as they saw a dosage on the box for adults.",
+        type: "Clinical",
+        hint: "This is a dosage and safety question for a minor.",
+        options: [
+          { text: "Give them the child's dosage from a medical website.", correct: false },
+          { text: "Politely explain that this is a clinical question and you will transfer them to a pharmacist.", correct: true },
+          { text: "Tell them to call their doctor.", correct: false }
+        ]
+      },
+      {
+        question: "A member needs to update their mailing address and phone number on their account.",
+        type: "Non-Clinical",
+        hint: "This is a basic account maintenance task.",
+        options: [
+          { text: "Update the member's demographic information.", correct: true },
+          { text: "Tell them you cannot change personal information.", correct: false },
+          { text: "Transfer the call to a pharmacist.", correct: false }
+        ]
+      },
+      {
+        question: "A member is asking about potential drug interactions between their prescribed blood pressure medication and a new herbal supplement they want to start taking.",
+        type: "Clinical",
+        hint: "This involves drug interactions and requires a medical professional.",
+        options: [
+          { text: "Tell them it's likely safe since it's an herbal supplement.", correct: false },
+          { text: "Politely explain you are not able to provide medical advice and will transfer the call to a pharmacist.", correct: true },
+          { text: "Advise them to consult an online health forum for advice.", correct: false }
+        ]
+      },
+      {
+        question: "A member is asking for an update on the status of a claim that was denied and wants to know what they need to do to resubmit it.",
+        type: "Non-Clinical",
+        hint: "This is a question about the claims process and how to resolve a denial.",
+        options: [
+          { text: "Explain the reason for the denial and guide them through the resubmission process.", correct: true },
+          { text: "Tell them the claim was denied and you can't help further.", correct: false },
+          { text: "Transfer the call to the clinical team.", correct: false }
+        ]
+      },
+      {
+        question: "A member reports that their pharmacy gave them a medication that looks different from the one they received last month, even though the prescription is the same.",
+        type: "Non-Clinical",
+        hint: "This is a pharmacy dispensing issue. You cannot confirm if it's the 'right' medication, but can provide the necessary information.",
+        options: [
+          { text: "Tell the member that if the name is the same, it's correct.", correct: false },
+          { text: "Advise the member to contact the pharmacy and their prescribing doctor to verify the medication.", correct: true },
+          { text: "Tell them to take it anyway.", correct: false }
+        ]
+      },
+      {
+        question: "A member is calling on behalf of their elderly parent and needs to know if their parent's insurance plan covers a specific brand-name vaccine.",
+        type: "Non-Clinical",
+        hint: "This is a question about benefit coverage. As long as the member is authorized, you can help.",
+        options: [
+          { text: "Verify the member's authorization to speak about their parent's account, then look up the vaccine's coverage status and explain any steps needed.", correct: true },
+          { text: "Tell the member's parent to call back themselves.", correct: false },
+          { text: "Transfer the call to a nurse to discuss the vaccine.", correct: false }
+        ]
+      }
+    ],
+    terminology: {
+      'pbm': {
+          name: "PBM (Pharmacy Benefit Manager)",
+          definition: "A third-party administrator hired by a health plan to manage prescription drug benefits. PBMs handle things like processing and paying claims, creating drug formularies, and negotiating discounts with pharmacies."
+      },
+      'formulary': {
+          name: "Formulary",
+          definition: "A list of prescription drugs that a health plan or PBM covers. It's often organized into tiers based on the cost of the medication, with generics being the least expensive."
+      },
+      'prior authorization': {
+          name: "Prior Authorization (PA)",
+          definition: "A process required by some health plans where a member's doctor must get approval from the plan before they can fill a prescription for a specific medication. This is often required for expensive or specialty drugs."
+      },
+      'eob': {
+          name: "EOB (Explanation of Benefits)",
+          definition: "A document sent by an insurance company to a member explaining what medical services were covered and how much the company paid. An EOB is NOT a bill."
+      },
+      'carc': {
+          name: "CARC (Claim Adjustment Reason Code)",
+          definition: "These codes are used on an EOB to explain why a claim payment was adjusted or denied. Each code corresponds to a specific reason, such as 'deductible' or 'non-covered service.'"
+      },
+      'claim denial': {
+        name: "Claim Denial",
+        definition: "When an insurance company refuses to pay for a prescription or service. Reasons for denial can include non-formulary status, missing prior authorization, or a dosage exceeding a safety limit."
+      },
+      'co-insurance': {
+        name: "Co-insurance",
+        definition: "A form of cost-sharing in which a member pays a percentage of the cost for a covered service after their deductible has been met."
+      },
+      'specialty pharmacy': {
+        name: "Specialty Pharmacy",
+        definition: "A pharmacy that dispenses high-cost, high-tech, or injectable drugs for complex medical conditions, often providing additional services like patient education and care coordination."
+      },
+      'therapeutic substitution': {
+        name: "Therapeutic Substitution",
+        definition: "Replacing a prescribed medication with a different drug that has a similar clinical effect, often to lower costs or for formulary reasons."
+      },
+      'Deductible': {
+        name: "Deductible",
+        definition: "The amount you must pay out of pocket before your health insurance begins to pay for covered services."
+      },
+      'Copayment': {
+        name: "Copayment",
+        definition: "A fixed amount you pay for a covered health care service after you've paid your deductible."
+      },
+      'Step Therapy': {
+        name: "Step Therapy",
+        definition: "A type of prior authorization where a patient must first try a less expensive, similar drug before being approved for a more expensive one."
+      },
+      'Specialty Medication': {
+        name: "Specialty Medication",
+        definition: "High-cost drugs used to treat complex, chronic, or rare conditions, often requiring special handling and administration."
+      },
+      'Generic vs. Brand-Name': {
+        name: "Generic vs. Brand-Name",
+        definition: "A generic drug has the same active ingredients as a brand-name drug but is usually less expensive."
+      },
+      'Out-of-Pocket Maximum': {
+        name: "Out-of-Pocket Maximum",
+        definition: "The most you'll have to pay for covered services in a plan year."
+      },
+      'Drug Utilization Review': {
+        name: "Drug Utilization Review",
+        definition: "A review of a member's prescription history to ensure that their medications are safe and appropriate."
+      }
+    }
+  };
+
+  // --- MODULE NAVIGATION LOGIC ---
+  const navButtons = document.querySelectorAll('nav button');
+  const sections = document.querySelectorAll('main section');
+  navButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      navButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      sections.forEach(section => section.classList.remove('active'));
+      document.getElementById(button.getAttribute('data-module') + '-module').classList.add('active');
+      if (button.getAttribute('data-module') === 'inquiries') {
+        loadInquiryScenario();
+      }
+      updateProgress();
+    });
+  });
+
+  // --- PBM BASICS MODULE LOGIC ---
+  function lookupTerm() {
+    const input = document.getElementById("termInput").value.trim().toLowerCase();
+    const resultDiv = document.getElementById("result");
+    const termData = appState.terminology[input];
+
+    if (termData) {
+        resultDiv.innerHTML = `
+            <h2 class="text-xl font-semibold text-gray-700">${termData.name}</h2>
+            <p class="text-gray-600 mt-2">${termData.definition}</p>
+        `;
+        updateProgress('pbmbasics');
+    } else {
+        resultDiv.innerHTML = `
+            <h2 class="text-xl font-semibold text-gray-700">Term Not Found</h2>
+            <p class="text-gray-600 mt-2">
+                Sorry, I couldn't find a definition for that term. Please check your spelling or try one of the examples provided.
+            </p>
+        `;
+    }
+  }
+
+  // --- MEDICATION MODULE LOGIC ---
+  document.getElementById('med-lookup-btn').addEventListener('click', () => {
+    const medName = document.getElementById('med-lookup').value.trim();
+    const feedbackEl = document.getElementById('med-feedback');
+    const medInfo = appState.medicationData[medName];
+    if (medInfo) {
+      feedbackEl.innerHTML = `<strong>${medInfo.brand}</strong> (${medInfo.generic})<br>Type: ${medInfo.type}<br>Tier: ${medInfo.tier}<br>Status: ${medInfo.status}`;
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      updateProgress('medication');
+    } else {
+      feedbackEl.textContent = "Medication not found in formulary. Try another.";
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+  // New logic for Generic vs. Brand task
+  document.getElementById('generic-brand-btn').addEventListener('click', () => {
+    const input = document.getElementById('generic-brand-lookup').value.trim();
+    const feedbackEl = document.getElementById('generic-brand-feedback');
+    const type = appState.medicationTypes[input];
+    if (type) {
+      feedbackEl.textContent = `✅ Correct! ${input} is a ${type} medication.`;
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      updateProgress('medication');
+    } else {
+      feedbackEl.textContent = "⚠️ Incorrect. Please verify the medication name or try another. Hint: You can use 'Lipitor' or 'Atorvastatin'.";
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  // --- CLINICAL INQUIRY MODULE LOGIC ---
+  let currentScenarioIndex = 0;
+  function loadInquiryScenario() {
+    const container = document.getElementById('inquiry-scenario-container');
+    container.innerHTML = '';
+    const scenario = appState.inquiryScenarios[currentScenarioIndex];
+    if (!scenario) {
+      container.innerHTML = '<p>All scenarios completed!</p>';
+      updateProgress('inquiries');
+      return;
+    }
+    const taskDiv = document.createElement('div');
+    taskDiv.className = 'task';
+    taskDiv.innerHTML = `<h3>Scenario:</h3><p>${scenario.question}</p><div class="scenario-buttons"></div>`;
+    
+    const buttonContainer = taskDiv.querySelector('.scenario-buttons');
+    scenario.options.forEach(option => {
+      const button = document.createElement('button');
+      button.textContent = option.text;
+      button.onclick = () => checkInquiryAnswer(option.correct, scenario.type);
+      buttonContainer.appendChild(button);
+    });
+    container.appendChild(taskDiv);
+  }
+
+  function checkInquiryAnswer(isCorrect, type) {
+    const feedbackEl = document.getElementById('inquiry-feedback');
+    const buttonContainer = document.querySelector('#inquiries-module .scenario-buttons');
+
+    if (isCorrect) {
+      feedbackEl.textContent = `✅ Correct! This is a **${type}** issue. You would transfer the call to the appropriate clinical team.`;
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      
+      // Add a 'Next Scenario' button for explicit progression
+      const nextButton = document.createElement('button');
+      nextButton.textContent = 'Next Scenario';
+      nextButton.onclick = () => {
+        currentScenarioIndex++;
+        loadInquiryScenario();
+        feedbackEl.style.display = 'none';
+      };
+      buttonContainer.innerHTML = '';
+      buttonContainer.appendChild(nextButton);
+
+    } else {
+      feedbackEl.textContent = `❌ Incorrect. This is a **${type}** issue. Try again.`;
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  }
+
+  // --- PRIOR AUTHORIZATION MODULE LOGIC ---
+  document.getElementById('priorAuth-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('pa-member-id').value.trim();
+    const paForm = document.getElementById('pa-form').value.trim();
+    const feedbackEl = document.getElementById('priorAuth-feedback');
+
+    if (memberId === 'PA789' && paForm.toLowerCase().includes('specialty')) {
+      feedbackEl.textContent = '✅ Prior Authorization successfully submitted for review!';
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      this.reset();
+      updateProgress('priorAuth');
+    } else {
+      feedbackEl.textContent = '⚠️ Submission failed. Please verify the Member ID and form name. (Hint: ID is PA789)';
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  document.getElementById('pa-new-med-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('pa-new-med-id').value.trim();
+    const paForm = document.getElementById('pa-new-med-form').value.trim();
+    const feedbackEl = document.getElementById('pa-new-med-feedback');
+
+    if (memberId === 'AR765' && paForm.toLowerCase().includes('mental health')) {
+      feedbackEl.textContent = '✅ Prior Authorization successfully submitted for Aripiprazole!';
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      this.reset();
+      updateProgress('priorAuth');
+    } else {
+      feedbackEl.textContent = '⚠️ Submission failed. Please verify the Member ID and form name.';
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  document.getElementById('step-therapy-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('st-member-id').value.trim();
+    const responseText = document.getElementById('st-response').value.trim();
+    const feedbackEl = document.getElementById('step-therapy-feedback');
+
+    if (memberId === 'ST2024' && responseText.toLowerCase().includes('step therapy') && responseText.toLowerCase().includes('alternative')) {
+      feedbackEl.textContent = '✅ Excellent response! You correctly identified the issue and provided clear next steps for the member.';
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      this.reset();
+      updateProgress('priorAuth');
+    } else {
+      feedbackEl.textContent = '⚠️ Response failed. Please ensure you have the correct member ID and that your explanation clearly mentions "step therapy" and the need for an "alternative" medication.';
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+
+  // --- CUSTOMER SERVICE SCENARIOS LOGIC ---
+  document.getElementById('submit-cs-response').addEventListener('click', () => {
+    const responseText = document.getElementById('cs-response').value.trim();
+    const feedbackEl = document.getElementById('cs-feedback');
+    if (responseText.length > 50 && (responseText.toLowerCase().includes('understand') || responseText.toLowerCase().includes('empathy'))) {
+        feedbackEl.textContent = "✅ Excellent response. You showed empathy and provided a professional path forward. You completed this module!";
+        feedbackEl.classList.add('success');
+        feedbackEl.classList.remove('error');
+        updateProgress('cs_scenarios');
+    } else {
+        feedbackEl.textContent = "⚠️ Your response needs to be more empathetic and professional. Try again. (Hint: Focus on listening and explaining the formulary process.)";
+        feedbackEl.classList.add('error');
+        feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  document.getElementById('submit-cs-response-2').addEventListener('click', () => {
+    const responseText = document.getElementById('cs-response-2').value.trim();
+    const feedbackEl = document.getElementById('cs-feedback-2');
+    if (responseText.length > 50 && (responseText.toLowerCase().includes('explanation of benefits') || responseText.toLowerCase().includes('eoB') || responseText.toLowerCase().includes('claim adjustment'))) {
+        feedbackEl.textContent = "✅ Excellent response. You accurately addressed the member's confusion by explaining the EOB and CARC codes.";
+        feedbackEl.classList.add('success');
+        feedbackEl.classList.remove('error');
+        updateProgress('cs_scenarios');
+    } else {
+        feedbackEl.textContent = "⚠️ Your response needs to directly address the EOB and CARC codes. Try again.";
+        feedbackEl.classList.add('error');
+        feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  document.getElementById('submit-cs-response-3').addEventListener('click', () => {
+    const responseText = document.getElementById('cs-response-3').value.trim();
+    const feedbackEl = document.getElementById('cs-feedback-3');
+    if (responseText.length > 50 && (responseText.toLowerCase().includes('verify') || responseText.toLowerCase().includes('reactivate') || responseText.toLowerCase().includes('active'))) {
+        feedbackEl.textContent = "✅ Excellent response. You correctly identified the need to verify the member's status and offer to help reactivate their coverage.";
+        feedbackEl.classList.add('success');
+        feedbackEl.classList.remove('error');
+        updateProgress('cs_scenarios');
+    } else {
+        feedbackEl.textContent = "⚠️ Your response needs to address the insurance status directly. Try again.";
+        feedbackEl.classList.add('error');
+        feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  document.getElementById('submit-cs-response-4').addEventListener('click', () => {
+    const responseText = document.getElementById('cs-response-4').value.trim();
+    const feedbackEl = document.getElementById('cs-feedback-4');
+    if (responseText.length > 50 && (responseText.toLowerCase().includes('hipaa') || responseText.toLowerCase().includes('authorization') || responseText.toLowerCase().includes('privacy'))) {
+        feedbackEl.textContent = "✅ Excellent response. You correctly identified the privacy concerns and the need for a signed release.";
+        feedbackEl.classList.add('success');
+        feedbackEl.classList.remove('error');
+        updateProgress('cs_scenarios');
+    } else {
+        feedbackEl.textContent = "⚠️ Your response needs to address the privacy and HIPAA concerns. Try again.";
+        feedbackEl.classList.add('error');
+        feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  });
+
+  // --- HIPAA & PRIVACY MODULE LOGIC ---
+  function checkHipaaAnswer(isCorrect, feedbackId) {
+    const feedbackEl = document.getElementById(feedbackId);
+    if (isCorrect) {
+      feedbackEl.textContent = "✅ Correct! You must never share PHI with an unauthorized individual, even a family member. You completed this module!";
+      feedbackEl.classList.add('success');
+      feedbackEl.classList.remove('error');
+      updateProgress('hipaa');
+    } else {
+      feedbackEl.textContent = "❌ Incorrect. Sharing any information with an unauthorized individual, regardless of their relationship, is a HIPAA violation. Try again.";
+      feedbackEl.classList.add('error');
+      feedbackEl.classList.remove('success');
+    }
+    feedbackEl.style.display = 'block';
+  }
+
+  // --- CAREER PATH TRACKER LOGIC ---
+  function updateProgress(moduleName) {
+    if (moduleName) {
+      appState.completedModules.add(moduleName);
+    }
+    const completedCount = appState.completedModules.size;
+    const totalModules = 6;
+    const progressEl = document.getElementById('career-progress');
+    progressEl.value = completedCount;
+    progressEl.max = totalModules;
+    document.getElementById('progress-text').textContent = completedCount;
+
+    const moduleStatusList = document.getElementById('module-status-list');
+    moduleStatusList.innerHTML = '';
+    const modules = ['pbmbasics', 'medication', 'inquiries', 'priorAuth', 'cs_scenarios', 'hipaa'];
+    modules.forEach(mod => {
+      const isCompleted = appState.completedModules.has(mod);
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `${isCompleted ? '✅' : '⏳'} ${mod.charAt(0).toUpperCase() + mod.slice(1).replace(/([A-Z])/g, ' $1')} Module`;
+      moduleStatusList.appendChild(listItem);
+    });
+
+    const milestoneList = document.getElementById('milestone-list');
+    if (completedCount >= 3 && !document.getElementById('milestone-badge-1')) {
+      milestoneList.innerHTML += '<li id="milestone-badge-1">🏅 PBM Fundamentals Badge</li>';
+    }
+    if (completedCount === totalModules && !document.getElementById('final-milestone')) {
+      milestoneList.innerHTML += '<li id="final-milestone">🚀 PBM Ready Certification</li>';
+    }
+  }
+
+  // Initial load
+  updateProgress();
+  loadInquiryScenario();
+</script>
+
+</body>
+</html>
