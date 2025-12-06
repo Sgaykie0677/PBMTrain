@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rightway PBM Training Sandbox</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --tredium-blue: #0056b3; 
+            --tredium-header-text: #ffffff;
+            --advocate-green: #28a745; /* Advocate Color */
+        }
+        body { background-color: #f4f6f8; font-size: 0.9rem; }
+        
+        /* Tredium Style Imitation */
+        .system-header {
+            background-color: var(--tredium-blue);
+            color: var(--tredium-header-text);
+            padding: 10px 15px;
+            border-radius: 4px 4px 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        .blade {
+            background: white;
+            border: 1px solid #dee2e6;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .blade-body { padding: 15px; }
+        .label-text { font-weight: 600; font-size: 0.8rem; color: #666; }
+        .data-text { font-weight: 400; color: #000; }
+
+        /* Advocate Blade Style */
+        .advocate-header {
+            background-color: var(--advocate-green);
+            color: white;
+            padding: 8px 15px;
+            font-weight: bold;
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* Scenario Sidebar */
+        .scenario-panel {
+            background: white;
+            border-right: 1px solid #dee2e6;
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            left: 0; top: 0; width: 300px;
+            z-index: 1000;
+        }
+        .main-content { margin-left: 300px; padding: 20px; }
+        
+        /* Status Colors */
+        .status-paid { color: #28a745; font-weight: bold; }
+        .status-rejected { color: #dc3545; font-weight: bold; }
+        
+        /* Interactive Elements */
+        .script-box {
+            background-color: #e9f7fe;
+            border-left: 4px solid #0056b3;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="scenario-panel p-3">
+    <h5 class="text-primary"><i class="fas fa-graduation-cap"></i> Training Sandbox</h5>
+    <hr>
+    
+    <div class="mb-4">
+        <label class="label-text">Select Scenario:</label>
+        <select id="scenarioSelect" class="form-select" onchange="loadScenario()">
+            <option value="">-- Choose Module --</option>
+            <option value="1">1. Basic Inquiry & HIPAA</option>
+            <option value="2">2. Reject 79: Refill Too Soon</option>
+            <option value="3">3. Reject 78: Cost Exceeds Max</option>
+            <option value="4">4. Reject R6: Mandatory Mail</option>
+        </select>
+        <button class="btn btn-success btn-sm w-100 mt-2" onclick="startScenario()">Start Scenario</button>
+    </div>
+
+    <div id="callAssistant" class="hidden">
+        <h6 class="border-bottom pb-2">Call Scripting</h6>
+        
+        <div id="script-greeting" class="script-box">
+            "Thank you for calling Rightway; this is [Name] speaking..."
+            <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="checkGreeting">
+                <label class="form-check-label small">Greeting Completed</label>
+            </div>
+        </div>
+
+        <div id="script-hipaa" class="script-box">
+            "For HIPAA verification, please verify your Full Name, DOB, and Address."
+            <div class="mt-2">
+                <input type="text" id="verifyName" class="form-control form-control-sm mb-1" placeholder="Member Name">
+                <input type="text" id="verifyDOB" class="form-control form-control-sm mb-1" placeholder="DOB (MM/DD/YYYY)">
+                <button class="btn btn-primary btn-sm w-100" onclick="verifyHipaa()">Verify HIPAA</button>
+            </div>
+        </div>
+
+        <div id="scenario-goal" class="alert alert-info mt-3 small">
+            </div>
+    </div>
+</div>
+
+<div class="main-content">
+    
+    <ul class="nav nav-tabs mb-3" id="systemTabs">
+        <li class="nav-item">
+            <button class="nav-link active" id="tab-tredium" data-bs-target="#tredium-view" type="button">
+                <i class="fas fa-desktop"></i> Tredium (Claims)
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="tab-mhk" data-bs-target="#mhk-view" type="button" onclick="switchSystem('MHK')">
+                <i class="fas fa-file-medical"></i> MHK (Clinical/PA)
+            </button>
+        </li>
+    </ul>
+
+    <div id="tredium-view" class="container-fluid hidden">
+        
+        <div class="blade">
+            <div class="system-header">Member Search</div>
+            <div class="blade-body">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="label-text">Member ID</label>
+                        <input type="text" class="form-control form-control-sm" id="searchId">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="label-text">Date of Birth</label>
+                        <input type="text" class="form-control form-control-sm" id="searchDob">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary btn-sm w-100" onclick="performSearch()">Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="advocateBlade" class="blade hidden">
+            <div class="advocate-header"><i class="fas fa-edit"></i> Advocate Documentation</div>
+            <div class="blade-body">
+                <label class="label-text">Case Notes (Required for Audit)</label>
+                <textarea class="form-control form-control-sm mb-2" id="advocateNotes" rows="3" placeholder="Document all steps: HIPAA verified, reason for call, Tredium action, resolution..."></textarea>
+                <button class="btn btn-outline-success btn-sm" onclick="saveAdvocateNotes()"><i class="fas fa-save"></i> Save Notes</button>
+                <span id="advocateStatus" class="ms-2 small text-muted"></span>
+            </div>
+        </div>
+
+        <div id="patientProfile" class="blade hidden">
+            <div class="system-header">
+                <span><i class="fas fa-user"></i> Patient: <span id="ptName">--</span></span>
+                <span id="ptStatus" class="badge bg-success">Active</span>
+            </div>
+            <div class="blade-body">
+                <div class="row">
+                    <div class="col-3"><span class="label-text">Group:</span> <br><span id="ptGroup" class="data-text">--</span></div>
+                    <div class="col-3"><span class="label-text">Person Code:</span> <br><span id="ptPcn" class="data-text">--</span></div>
+                    <div class="col-3"><span class="label-text">DOB:</span> <br><span id="ptDobDisplay" class="data-text">--</span></div>
+                    <div class="col-3"><span class="label-text">Address:</span> <br><span id="ptAddress" class="data-text">--</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="claimsBlade" class="blade hidden">
+            <div class="system-header">Claim Information & Trial</div>
+            <div class="blade-body">
+                
+                <h6 class="label-text border-bottom">Recent Claim History</h6>
+                <table class="table table-sm table-striped table-hover mb-4">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Rx Number</th>
+                            <th>Drug</th>
+                            <th>Status</th>
+                            <th>Reject Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claimHistoryBody"></tbody>
+                </table>
+
+                <div class="card bg-light">
+                    <div class="card-body p-2">
+                        <h6 class="label-text text-primary">Run Trial Claim</h6>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="label-text">NDC [5-4-2]</label>
+                                <input type="text" id="trialNdc" class="form-control form-control-sm" placeholder="xxxxx-xxxx-xx">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="label-text">Qty</label>
+                                <input type="number" id="trialQty" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="label-text">Days Supply</label>
+                                <input type="number" id="trialDays" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-warning btn-sm w-100" onclick="submitTrial()">Submit Trial</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rejectionPanel" class="alert alert-danger mt-3 hidden">
+                    <strong>REJECTED:</strong> <span id="rejectCodeDisplay"></span>
+                    <br>
+                    <span id="rejectMessageDisplay"></span>
+                    <hr>
+                    <button class="btn btn-outline-danger btn-sm" onclick="showOverrideModal()">Attempt Override</button>
+                </div>
+                
+                 <div id="successPanel" class="alert alert-success mt-3 hidden">
+                    <strong>PAID</strong> - Claim processed successfully.
+                    <br>
+                    Copay: $10.00 | Auth: 99928374
+                    <div id="scenarioCompleteMsg" class="mt-2 hidden">
+                        <p class="mb-0 text-danger small">*** To complete this scenario, you MUST save Advocate Notes. ***</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mhk-view" class="container-fluid hidden">
+        <div class="blade" style="border-top: 4px solid #28a745;">
+            <div class="system-header" style="background-color: #28a745;"><i class="fas fa-file-medical"></i> MHK - Clinical Care</div>
+            <div class="blade-body">
+                <h5 class="mb-3">Authorization Search</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Search by Member ID..." id="mhkSearchId">
+                    <button class="btn btn-success" onclick="searchMhk()">Search Cases</button>
+                </div>
+                <div id="mhkResults" class="hidden">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr><th>Case ID</th><th>Drug</th><th>Status</th><th>Start Date</th><th>End Date</th></tr>
+                        </thead>
+                        <tbody id="mhkTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="noCasesMsg" class="alert alert-warning hidden">No active Prior Authorizations found for this member.</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="overrideModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Enter Override / Prior Auth</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="overrideForm">
+                    <div class="mb-2">
+                        <label class="label-text">Prior Auth Type</label>
+                        <select class="form-select form-select-sm" id="ovrType">
+                            <option value="CLAIM">3 - CLAIM (One Time)</option>
+                            <option value="PATIENT">1 - PATIENT (Duration)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="label-text">Reason Code</label>
+                        <select class="form-select form-select-sm" id="ovrReason">
+                            <option value="">-- Select --</option>
+                            <option value="VACATION">Vacation Supply</option>
+                            <option value="LOST">Lost/Stolen</option>
+                            <option value="RETAIL_EXC">Retail Exception (R6)</option>
+                            <option value="MAX_DOLLAR">Max Dollar Approved (78)</option>
+                            <option value="ADMIN">Administrative Approval</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="label-text">Start / End Date</label>
+                        <div class="input-group">
+                            <input type="date" id="ovrStart" class="form-control form-control-sm">
+                            <input type="date" id="ovrEnd" class="form-control form-control-sm">
+                        </div>
+                        <small class="text-muted">Standard OVR duration: 5-7 days</small>
+                    </div>
+                    <div class="mb-2">
+                        <label class="label-text">Notes (Required for Audit)</label>
+                        <textarea class="form-control" id="ovrNotes" rows="2" placeholder="e.g. Approved per plan, initials..."></textarea>
+                    </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="submitOverride()">Process Override</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // --- MOCK DATA ---
+    const members = {
+        'RW101': { name: 'John Doe', dob: '01/01/1980', address: '123 Main St', group: 'RWG001', pcn: '001', mhkCases: [] },
+        'RW102': { name: 'Sarah Smith', dob: '05/15/1990', address: '456 Oak Ave', group: 'RWG002', pcn: '002', 
+                   mhkCases: [{id: 'PA-900', drug: 'Ozempic', status: 'Approved', start: '2025-01-01', end: '2025-12-31'}] }
+    };
+
+    const drugs = {
+        '12345-6789-01': { name: 'Lisinopril 10mg', cost: 5.00, reject: null },
+        '99999-8888-77': { name: 'SuperMeds 500mg', cost: 4000.00, reject: '78' }, 
+        '55555-4444-33': { name: 'SpecialtyDrug Inj', cost: 1500.00, reject: 'R6' }, 
+        '11111-2222-33': { name: 'Adderall 20mg', cost: 50.00, reject: '79' }
+    };
+
+    let currentScenario = 0;
+    let isHipaaVerified = false;
+    let currentMember = null;
+    let isClaimResolved = false;
+    let isAdvocateSaved = false;
+
+    // --- INITIALIZATION ---
+    function startScenario() {
+        currentScenario = parseInt(document.getElementById('scenarioSelect').value);
+        if(!currentScenario) { alert("Please select a scenario."); return; }
+        
+        // Reset state
+        isClaimResolved = false;
+        isAdvocateSaved = false;
+        
+        // Reset Interface
+        document.getElementById('callAssistant').classList.remove('hidden');
+        document.getElementById('tredium-view').classList.add('hidden');
+        document.getElementById('mhk-view').classList.add('hidden');
+        document.getElementById('checkGreeting').checked = false;
+        document.getElementById('verifyName').value = '';
+        document.getElementById('advocateBlade').classList.add('hidden');
+        document.getElementById('advocateNotes').value = '';
+        document.getElementById('advocateStatus').innerText = '';
+        document.getElementById('successPanel').classList.add('hidden');
+        document.getElementById('rejectionPanel').classList.add('hidden');
+        document.getElementById('script-hipaa').classList.remove('status-paid');
+
+
+        isHipaaVerified = false;
+        
+        // Set Goal Text based on Scenario
+        const goalDiv = document.getElementById('scenario-goal');
+        if(currentScenario === 2) {
+            goalDiv.innerHTML = "<strong>Goal:</strong> Override Reject 79 (Refill Too Soon) for a vacation. Must use **CLAIM** level override. <br><strong>Member ID:</strong> RW101 / **NDC:** 11111-2222-33";
+        } else if(currentScenario === 3) {
+            goalDiv.innerHTML = "<strong>Goal:</strong> Override Reject 78 (Cost Exceeds $3500). Must use **PATIENT** level override. <br><strong>Member ID:</strong> RW101 / **NDC:** 99999-8888-77";
+        } else if(currentScenario === 4) {
+            goalDiv.innerHTML = "<strong>Goal:</strong> Override Reject R6 (Mandatory Mail) with a Retail Exception. Must use **CLAIM** level override. <br><strong>Member ID:</strong> RW101 / **NDC:** 55555-4444-33";
+        } else {
+            goalDiv.innerHTML = "<strong>Goal:</strong> Verify HIPAA and search member to start Advocate notes.";
+        }
+    }
+
+    // --- HIPAA LOGIC ---
+    function verifyHipaa() {
+        if(!document.getElementById('checkGreeting').checked) {
+            alert("You must complete the greeting script first!");
+            return;
+        }
+        
+        const name = document.getElementById('verifyName').value;
+        const dob = document.getElementById('verifyDOB').value;
+        
+        if(name && dob) {
+            isHipaaVerified = true;
+            document.getElementById('tredium-view').classList.remove('hidden');
+            document.getElementById('script-hipaa').classList.add('status-paid');
+            document.getElementById('advocateBlade').classList.remove('hidden'); // Show Advocate Blade after HIPAA
+            document.getElementById('tredium-view').querySelector('.nav-link').click(); // Ensure Tredium tab is active
+            alert("HIPAA Verified. Access to Tredium & Advocate Granted.");
+        } else {
+            alert("Please enter Name and DOB to verify HIPAA.");
+        }
+    }
+
+    // --- SEARCH LOGIC ---
+    function performSearch() {
+        if(!isHipaaVerified) { alert("Access Denied: HIPAA Verification Required"); return; }
+        
+        const id = document.getElementById('searchId').value;
+        if(members[id]) {
+            currentMember = members[id];
+            // Populate Blade
+            document.getElementById('patientProfile').classList.remove('hidden');
+            document.getElementById('claimsBlade').classList.remove('hidden');
+            document.getElementById('ptName').innerText = currentMember.name;
+            document.getElementById('ptGroup').innerText = currentMember.group;
+            document.getElementById('ptPcn').innerText = currentMember.pcn;
+            document.getElementById('ptDobDisplay').innerText = currentMember.dob;
+            document.getElementById('ptAddress').innerText = currentMember.address;
+            
+            // Populate Mock History 
+            const tbody = document.getElementById('claimHistoryBody');
+            tbody.innerHTML = ''; 
+            if(currentScenario === 2) { 
+                tbody.innerHTML = `<tr><td>${new Date().toLocaleDateString()}</td><td>100001</td><td>Adderall 20mg</td><td class="status-paid">PAID</td><td>-</td></tr>`;
+            }
+        } else {
+            alert("Member not found.");
+        }
+    }
+    
+    // --- ADVOCATE LOGIC ---
+    function saveAdvocateNotes() {
+        const notes = document.getElementById('advocateNotes').value;
+        if (notes.length < 10) {
+            alert("Advocate Note must be at least 10 characters long to simulate professional documentation.");
+            return;
+        }
+        isAdvocateSaved = true;
+        document.getElementById('advocateStatus').innerText = `Notes saved at ${new Date().toLocaleTimeString()}. Case Complete: ${isClaimResolved ? 'YES' : 'PENDING'}`;
+        document.getElementById('advocateStatus').classList.remove('text-muted');
+        document.getElementById('advocateStatus').classList.add('text-success');
+        
+        if (isClaimResolved) {
+             alert("Scenario COMPLETE! You successfully documented the resolution.");
+        }
+    }
+
+
+    // --- TRIAL CLAIM LOGIC ---
+    function submitTrial() {
+        const ndc = document.getElementById('trialNdc').value;
+        const drug = drugs[ndc];
+        
+        document.getElementById('rejectionPanel').classList.add('hidden');
+        document.getElementById('successPanel').classList.add('hidden');
+        isClaimResolved = false;
+
+        if(!drug) { alert("Drug not found in formulary."); return; }
+
+        // LOGIC FOR SCENARIOS
+        let rejectCode = '';
+        let rejectMsg = '';
+
+        // Scenario 2: Refill Too Soon (79)
+        if(currentScenario === 2 && ndc === '11111-2222-33') {
+            rejectCode = '79';
+            rejectMsg = 'REFILL TOO SOON - NEXT FILL DATE 10 DAYS';
+        }
+        // Scenario 3: Cost Exceeds (78)
+        else if(currentScenario === 3 && ndc === '99999-8888-77') {
+            rejectCode = '78';
+            rejectMsg = `COST EXCEEDS MAXIMUM - COST: 4000.00`;
+        }
+        // Scenario 4: Mandatory Mail (R6)
+        else if(currentScenario === 4 && ndc === '55555-4444-33') {
+            rejectCode = 'R6';
+            rejectMsg = 'PRODUCT/SERVICE NOT APPROPRIATE FOR LOCATION - MANDATORY MAIL';
+        } else if (currentScenario === 1 && ndc === '12345-6789-01') {
+             // Basic scenario, claim passes
+        } else {
+             // Catch-all fail if wrong NDC for scenario
+             rejectCode = '20';
+             rejectMsg = 'CLAIM SUBMISSION ERROR - Check Scenario NDC';
+        }
+
+        if(rejectCode) {
+            document.getElementById('rejectionPanel').classList.remove('hidden');
+            document.getElementById('rejectCodeDisplay').innerText = rejectCode;
+            document.getElementById('rejectMessageDisplay').innerText = rejectMsg;
+        } else {
+            document.getElementById('successPanel').classList.remove('hidden');
+            // If successfully paid without override, mark as resolved
+            if(currentScenario === 1) {
+                isClaimResolved = true; 
+                document.getElementById('scenarioCompleteMsg').classList.remove('hidden');
+            }
+        }
+    }
+
+    // --- OVERRIDE LOGIC ---
+    function showOverrideModal() {
+        new bootstrap.Modal(document.getElementById('overrideModal')).show();
+    }
+
+    function submitOverride() {
+        const type = document.getElementById('ovrType').value;
+        const reason = document.getElementById('ovrReason').value;
+        const notes = document.getElementById('ovrNotes').value;
+        const rejectCode = document.getElementById('rejectCodeDisplay').innerText;
+
+        let valid = false;
+        let errorMsg = '';
+
+        // VALIDATION LOGIC BASED ON CCO-3
+        
+        if(rejectCode === '79') { // RTS
+            if((reason === 'VACATION' || reason === 'LOST') && type === 'CLAIM') {
+                valid = true;
+            } else {
+                errorMsg = 'For Reject 79, use CLAIM level and Vacation or Lost/Stolen reason.';
+            }
+        }
+        else if(rejectCode === '78') { // Cost Exceeds
+            if(type === 'PATIENT' && reason === 'MAX_DOLLAR') {
+                valid = true;
+            } else {
+                errorMsg = 'For Reject 78 without PA, use PATIENT level and MAX DOLLAR reason.';
+            }
+        }
+        else if(rejectCode === 'R6') { // Mandatory Mail
+            if(reason === 'RETAIL_EXC' && type === 'CLAIM') {
+                valid = true;
+            } else {
+                errorMsg = 'For Mandatory Mail, use CLAIM level and RETAIL EXCEPTION.';
+            }
+        }
+
+        if(valid) {
+            bootstrap.Modal.getInstance(document.getElementById('overrideModal')).hide();
+            document.getElementById('rejectionPanel').classList.add('hidden');
+            document.getElementById('successPanel').classList.remove('hidden');
+            document.getElementById('successPanel').innerHTML += '<br><strong>OVERRIDE APPLIED:</strong> ' + reason;
+            document.getElementById('scenarioCompleteMsg').classList.remove('hidden');
+            isClaimResolved = true;
+            
+            // Auto-fill advocate notes for override 
+            document.getElementById('advocateNotes').value = `HIPAA VERIFIED. Called regarding Reject ${rejectCode}. Applied ${type} level override with reason: ${reason}. Claim processed PAID.`;
+
+        } else {
+            alert("Override Failed: " + errorMsg);
+        }
+    }
+
+    // --- MHK LOGIC ---
+    function switchSystem(sys) {
+        if(sys === 'MHK') {
+            document.getElementById('tredium-view').classList.add('hidden');
+            document.getElementById('mhk-view').classList.remove('hidden');
+            document.getElementById('tab-tredium').classList.remove('active');
+            document.getElementById('tab-mhk').classList.add('active');
+            
+            // Auto-populate search field if a member is loaded
+            if (currentMember) {
+                document.getElementById('mhkSearchId').value = currentMember.name;
+            }
+        }
+    }
+
+    function searchMhk() {
+        // Simple search simulation
+        const id = document.getElementById('mhkSearchId').value || (currentMember ? currentMember.name : ''); 
+        const targetMember = Object.values(members).find(m => m.name === id);
+
+        if(targetMember && targetMember.mhkCases.length > 0) {
+            document.getElementById('mhkResults').classList.remove('hidden');
+            document.getElementById('noCasesMsg').classList.add('hidden');
+            const tbody = document.getElementById('mhkTableBody');
+            tbody.innerHTML = targetMember.mhkCases.map(c => 
+                `<tr><td>${c.id}</td><td>${c.drug}</td><td><span class="badge bg-success">${c.status}</span></td><td>${c.start}</td><td>${c.end}</td></tr>`
+            ).join('');
+        } else {
+            document.getElementById('mhkResults').classList.add('hidden');
+            document.getElementById('noCasesMsg').classList.remove('hidden');
+        }
+    }
+</script>
+</body>
+</html>
