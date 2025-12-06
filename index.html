@@ -8,40 +8,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
+        /* Rightway/Tredium Look and Feel */
         :root {
-            --tredium-blue: #0056b3; 
-            --tredium-header-text: #ffffff;
-            --advocate-green: #28a745; /* Advocate Color */
+            --tredium-primary: #005a9c; /* Darker Corporate Blue */
+            --tredium-header-bg: #e6f0f5; /* Light Blue/Gray Background */
+            --tredium-text: #333;
+            --advocate-green: #28a745; 
+            --mhk-green: #1a7e37; /* Darker Green for MHK */
         }
-        body { background-color: #f4f6f8; font-size: 0.9rem; }
+        body { background-color: #f4f6f8; font-size: 0.9rem; color: var(--tredium-text); }
         
-        /* Tredium Style Imitation */
-        .system-header {
-            background-color: var(--tredium-blue);
-            color: var(--tredium-header-text);
-            padding: 10px 15px;
-            border-radius: 4px 4px 0 0;
-            font-weight: bold;
+        /* Top Navigation Bar - Mimics Tredium's main menu (P2.pdf) */
+        .tredium-nav {
+            background-color: var(--tredium-primary);
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.95rem;
             display: flex;
-            justify-content: space-between;
+            align-items: center;
         }
+        .tredium-nav a {
+            color: white;
+            padding: 0 15px;
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+        .tredium-nav a:hover { opacity: 1; }
+
+        /* Blade Styling - Patient Profile/Search/etc. */
         .blade {
             background: white;
             border: 1px solid #dee2e6;
             margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 3px;
+        }
+        /* Blade Header (Tredium style) */
+        .blade-header {
+            background-color: var(--tredium-header-bg);
+            color: var(--tredium-primary);
+            padding: 8px 15px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
         }
         .blade-body { padding: 15px; }
-        .label-text { font-weight: 600; font-size: 0.8rem; color: #666; }
-        .data-text { font-weight: 400; color: #000; }
+        .label-text { font-weight: 600; font-size: 0.75rem; color: #666; text-transform: uppercase; }
+        .data-text { font-weight: 500; color: #000; font-size: 0.9rem; }
 
-        /* Advocate Blade Style */
+        /* Advocate Blade Style (Distinct Color) */
         .advocate-header {
             background-color: var(--advocate-green);
             color: white;
             padding: 8px 15px;
             font-weight: bold;
-            border-radius: 4px 4px 0 0;
+            font-size: 0.95rem;
+            border-radius: 3px 3px 0 0;
         }
 
         /* Scenario Sidebar */
@@ -54,21 +79,31 @@
             left: 0; top: 0; width: 300px;
             z-index: 1000;
         }
-        .main-content { margin-left: 300px; padding: 20px; }
+        .main-content { margin-left: 300px; padding: 0; } /* Remove padding, will be added by container */
+        .system-workspace { padding: 20px; }
         
         /* Status Colors */
-        .status-paid { color: #28a745; font-weight: bold; }
+        .status-paid { color: var(--advocate-green); font-weight: bold; }
         .status-rejected { color: #dc3545; font-weight: bold; }
         
         /* Interactive Elements */
         .script-box {
-            background-color: #e9f7fe;
-            border-left: 4px solid #0056b3;
+            background-color: #f0f8ff; /* Lightest Blue */
+            border-left: 4px solid var(--tredium-primary);
             padding: 10px;
             margin-bottom: 10px;
             font-style: italic;
         }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+
+        /* MHK View */
+        .mhk-header {
+            background-color: var(--mhk-green);
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -90,7 +125,7 @@
     </div>
 
     <div id="callAssistant" class="hidden">
-        <h6 class="border-bottom pb-2">Call Scripting</h6>
+        <h6 class="border-bottom pb-2 text-primary">Call Scripting</h6>
         
         <div id="script-greeting" class="script-box">
             "Thank you for calling Rightway; this is [Name] speaking..."
@@ -116,144 +151,148 @@
 
 <div class="main-content">
     
-    <ul class="nav nav-tabs mb-3" id="systemTabs">
-        <li class="nav-item">
-            <button class="nav-link active" id="tab-tredium" data-bs-target="#tredium-view" type="button">
-                <i class="fas fa-desktop"></i> Tredium (Claims)
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="tab-mhk" data-bs-target="#mhk-view" type="button" onclick="switchSystem('MHK')">
+    <div class="tredium-nav sticky-top" id="systemNav">
+        <span class="me-3 fw-bold"><i class="fas fa-desktop"></i> Tredium</span>
+        <a href="#" onclick="switchSystem('TRED')"><i class="fas fa-search"></i> Claim Lookup</a>
+        <a href="#" onclick="switchSystem('TRED')"><i class="fas fa-user-circle"></i> Patient</a>
+        <a href="#" onclick="switchSystem('TRED')"><i class="fas fa-file-invoice"></i> Plan Design</a>
+        <span class="ms-auto">
+            <button class="btn btn-sm text-white" style="background-color: var(--mhk-green);" onclick="switchSystem('MHK')">
                 <i class="fas fa-file-medical"></i> MHK (Clinical/PA)
             </button>
-        </li>
-    </ul>
+        </span>
+    </div>
 
-    <div id="tredium-view" class="container-fluid hidden">
-        
-        <div class="blade">
-            <div class="system-header">Member Search</div>
-            <div class="blade-body">
-                <div class="row g-2">
-                    <div class="col-md-3">
-                        <label class="label-text">Member ID</label>
-                        <input type="text" class="form-control form-control-sm" id="searchId">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="label-text">Date of Birth</label>
-                        <input type="text" class="form-control form-control-sm" id="searchDob">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-primary btn-sm w-100" onclick="performSearch()">Search</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="advocateBlade" class="blade hidden">
-            <div class="advocate-header"><i class="fas fa-edit"></i> Advocate Documentation</div>
-            <div class="blade-body">
-                <label class="label-text">Case Notes (Required for Audit)</label>
-                <textarea class="form-control form-control-sm mb-2" id="advocateNotes" rows="3" placeholder="Document all steps: HIPAA verified, reason for call, Tredium action, resolution..."></textarea>
-                <button class="btn btn-outline-success btn-sm" onclick="saveAdvocateNotes()"><i class="fas fa-save"></i> Save Notes</button>
-                <span id="advocateStatus" class="ms-2 small text-muted"></span>
-            </div>
-        </div>
-
-        <div id="patientProfile" class="blade hidden">
-            <div class="system-header">
-                <span><i class="fas fa-user"></i> Patient: <span id="ptName">--</span></span>
-                <span id="ptStatus" class="badge bg-success">Active</span>
-            </div>
-            <div class="blade-body">
-                <div class="row">
-                    <div class="col-3"><span class="label-text">Group:</span> <br><span id="ptGroup" class="data-text">--</span></div>
-                    <div class="col-3"><span class="label-text">Person Code:</span> <br><span id="ptPcn" class="data-text">--</span></div>
-                    <div class="col-3"><span class="label-text">DOB:</span> <br><span id="ptDobDisplay" class="data-text">--</span></div>
-                    <div class="col-3"><span class="label-text">Address:</span> <br><span id="ptAddress" class="data-text">--</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="claimsBlade" class="blade hidden">
-            <div class="system-header">Claim Information & Trial</div>
-            <div class="blade-body">
+    <div class="system-workspace">
+        <div id="tredium-view" class="container-fluid hidden">
+            <div class="row">
                 
-                <h6 class="label-text border-bottom">Recent Claim History</h6>
-                <table class="table table-sm table-striped table-hover mb-4">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Rx Number</th>
-                            <th>Drug</th>
-                            <th>Status</th>
-                            <th>Reject Code</th>
-                        </tr>
-                    </thead>
-                    <tbody id="claimHistoryBody"></tbody>
-                </table>
+                <div class="col-md-4">
+                    
+                    <div class="blade mb-3">
+                        <div class="blade-header">Member Search</div>
+                        <div class="blade-body p-3">
+                            <div class="mb-2">
+                                <label class="label-text">Member ID</label>
+                                <input type="text" class="form-control form-control-sm" id="searchId" placeholder="RW101">
+                            </div>
+                            <div class="mb-2">
+                                <label class="label-text">Date of Birth</label>
+                                <input type="text" class="form-control form-control-sm" id="searchDob" placeholder="MM/DD/YYYY">
+                            </div>
+                            <button class="btn btn-primary btn-sm w-100" onclick="performSearch()">Search</button>
+                        </div>
+                    </div>
 
-                <div class="card bg-light">
-                    <div class="card-body p-2">
-                        <h6 class="label-text text-primary">Run Trial Claim</h6>
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <label class="label-text">NDC [5-4-2]</label>
-                                <input type="text" id="trialNdc" class="form-control form-control-sm" placeholder="xxxxx-xxxx-xx">
+                    <div id="patientProfile" class="blade hidden">
+                        <div class="blade-header">
+                            <span><i class="fas fa-user"></i> Patient: <span id="ptName" class="data-text">--</span></span>
+                            <span id="ptStatus" class="badge bg-success">Active</span>
+                        </div>
+                        <div class="blade-body">
+                            <div class="row g-2">
+                                <div class="col-6"><span class="label-text">Group:</span> <br><span id="ptGroup" class="data-text">--</span></div>
+                                <div class="col-6"><span class="label-text">PCN:</span> <br><span id="ptPcn" class="data-text">--</span></div>
+                                <div class="col-12"><span class="label-text">Address:</span> <br><span id="ptAddress" class="data-text">--</span></div>
                             </div>
-                            <div class="col-md-2">
-                                <label class="label-text">Qty</label>
-                                <input type="number" id="trialQty" class="form-control form-control-sm">
                             </div>
-                            <div class="col-md-2">
-                                <label class="label-text">Days Supply</label>
-                                <input type="number" id="trialDays" class="form-control form-control-sm">
+                    </div>
+
+                    <div id="advocateBlade" class="blade hidden">
+                        <div class="advocate-header"><i class="fas fa-edit"></i> Advocate Documentation (Case Notes)</div>
+                        <div class="blade-body p-3">
+                            <label class="label-text">Case Notes (Required for Audit)</label>
+                            <textarea class="form-control form-control-sm mb-2" id="advocateNotes" rows="4" placeholder="Document all steps: HIPAA verified, reason for call, Tredium action, resolution..."></textarea>
+                            <button class="btn btn-outline-success btn-sm" onclick="saveAdvocateNotes()"><i class="fas fa-save"></i> Save Notes</button>
+                            <span id="advocateStatus" class="ms-2 small text-muted"></span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-md-8">
+                    <div id="claimsBlade" class="blade hidden">
+                        <div class="blade-header">Claim Information & Trial</div>
+                        <div class="blade-body">
+                            
+                            <h6 class="label-text border-bottom">Recent Claim History</h6>
+                            <table class="table table-sm table-striped table-hover mb-4">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Rx Number</th>
+                                        <th>Drug</th>
+                                        <th>Status</th>
+                                        <th>Reject Code</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="claimHistoryBody"></tbody>
+                            </table>
+
+                            <div class="card bg-light border-primary">
+                                <div class="card-body p-3">
+                                    <h6 class="label-text text-primary">Run New Trial Claim</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label class="label-text">NDC [5-4-2]</label>
+                                            <input type="text" id="trialNdc" class="form-control form-control-sm" placeholder="xxxxx-xxxx-xx">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="label-text">Qty</label>
+                                            <input type="number" id="trialQty" class="form-control form-control-sm" value="30">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="label-text">Days Supply</label>
+                                            <input type="number" id="trialDays" class="form-control form-control-sm" value="30">
+                                        </div>
+                                        <div class="col-md-4 d-flex align-items-end">
+                                            <button class="btn btn-warning btn-sm w-100" onclick="submitTrial()">Submit Trial</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button class="btn btn-warning btn-sm w-100" onclick="submitTrial()">Submit Trial</button>
+
+                            <div id="rejectionPanel" class="alert alert-danger mt-3 hidden">
+                                <strong>REJECTED:</strong> <span id="rejectCodeDisplay"></span>
+                                <br>
+                                <span id="rejectMessageDisplay"></span>
+                                <hr>
+                                <button class="btn btn-outline-danger btn-sm" onclick="showOverrideModal()"><i class="fas fa-exchange-alt"></i> Attempt Override</button>
+                            </div>
+                            
+                            <div id="successPanel" class="alert alert-success mt-3 hidden">
+                                <strong>PAID</strong> - Claim processed successfully.
+                                <br>
+                                Copay: $10.00 | Auth: 99928374
+                                <div id="scenarioCompleteMsg" class="mt-2 hidden">
+                                    <p class="mb-0 text-danger small">*** To complete this scenario, you MUST save Advocate Notes. ***</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div id="rejectionPanel" class="alert alert-danger mt-3 hidden">
-                    <strong>REJECTED:</strong> <span id="rejectCodeDisplay"></span>
-                    <br>
-                    <span id="rejectMessageDisplay"></span>
-                    <hr>
-                    <button class="btn btn-outline-danger btn-sm" onclick="showOverrideModal()">Attempt Override</button>
-                </div>
-                
-                 <div id="successPanel" class="alert alert-success mt-3 hidden">
-                    <strong>PAID</strong> - Claim processed successfully.
-                    <br>
-                    Copay: $10.00 | Auth: 99928374
-                    <div id="scenarioCompleteMsg" class="mt-2 hidden">
-                        <p class="mb-0 text-danger small">*** To complete this scenario, you MUST save Advocate Notes. ***</p>
-                    </div>
-                </div>
             </div>
         </div>
-    </div>
 
-    <div id="mhk-view" class="container-fluid hidden">
-        <div class="blade" style="border-top: 4px solid #28a745;">
-            <div class="system-header" style="background-color: #28a745;"><i class="fas fa-file-medical"></i> MHK - Clinical Care</div>
-            <div class="blade-body">
-                <h5 class="mb-3">Authorization Search</h5>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Search by Member ID..." id="mhkSearchId">
-                    <button class="btn btn-success" onclick="searchMhk()">Search Cases</button>
+        <div id="mhk-view" class="container-fluid hidden">
+            <div class="blade">
+                <div class="mhk-header"><i class="fas fa-file-medical"></i> MHK - Prior Authorization Search</div>
+                <div class="blade-body">
+                    <h5 class="mb-3 text-muted">Authorization Case Search</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Search by Member Name or ID..." id="mhkSearchId">
+                        <button class="btn text-white" style="background-color: var(--mhk-green);" onclick="searchMhk()">Search Cases</button>
+                    </div>
+                    <div id="mhkResults" class="hidden">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr><th>Case ID</th><th>Drug</th><th>Status</th><th>Start Date</th><th>End Date</th></tr>
+                            </thead>
+                            <tbody id="mhkTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noCasesMsg" class="alert alert-warning hidden">No active Prior Authorizations found for this member.</div>
                 </div>
-                <div id="mhkResults" class="hidden">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr><th>Case ID</th><th>Drug</th><th>Status</th><th>Start Date</th><th>End Date</th></tr>
-                        </thead>
-                        <tbody id="mhkTableBody"></tbody>
-                    </table>
-                </div>
-                <div id="noCasesMsg" class="alert alert-warning hidden">No active Prior Authorizations found for this member.</div>
             </div>
         </div>
     </div>
@@ -270,7 +309,7 @@
             <div class="modal-body">
                 <form id="overrideForm">
                     <div class="mb-2">
-                        <label class="label-text">Prior Auth Type</label>
+                        <label class="label-text">Prior Auth Type (CCO-3)</label>
                         <select class="form-select form-select-sm" id="ovrType">
                             <option value="CLAIM">3 - CLAIM (One Time)</option>
                             <option value="PATIENT">1 - PATIENT (Duration)</option>
@@ -280,8 +319,8 @@
                         <label class="label-text">Reason Code</label>
                         <select class="form-select form-select-sm" id="ovrReason">
                             <option value="">-- Select --</option>
-                            <option value="VACATION">Vacation Supply</option>
-                            <option value="LOST">Lost/Stolen</option>
+                            <option value="VACATION">Vacation Supply (79)</option>
+                            <option value="LOST">Lost/Stolen (79)</option>
                             <option value="RETAIL_EXC">Retail Exception (R6)</option>
                             <option value="MAX_DOLLAR">Max Dollar Approved (78)</option>
                             <option value="ADMIN">Administrative Approval</option>
@@ -380,10 +419,9 @@
         
         if(name && dob) {
             isHipaaVerified = true;
-            document.getElementById('tredium-view').classList.remove('hidden');
+            switchSystem('TRED');
             document.getElementById('script-hipaa').classList.add('status-paid');
             document.getElementById('advocateBlade').classList.remove('hidden'); // Show Advocate Blade after HIPAA
-            document.getElementById('tredium-view').querySelector('.nav-link').click(); // Ensure Tredium tab is active
             alert("HIPAA Verified. Access to Tredium & Advocate Granted.");
         } else {
             alert("Please enter Name and DOB to verify HIPAA.");
@@ -444,7 +482,7 @@
         document.getElementById('successPanel').classList.add('hidden');
         isClaimResolved = false;
 
-        if(!drug) { alert("Drug not found in formulary."); return; }
+        if(!drug) { alert("Drug not found in formulary. Check the NDC list in the goal box."); return; }
 
         // LOGIC FOR SCENARIOS
         let rejectCode = '';
@@ -469,7 +507,7 @@
         } else {
              // Catch-all fail if wrong NDC for scenario
              rejectCode = '20';
-             rejectMsg = 'CLAIM SUBMISSION ERROR - Check Scenario NDC';
+             rejectMsg = 'CLAIM SUBMISSION ERROR - Check Scenario NDC in the goal box.';
         }
 
         if(rejectCode) {
@@ -513,7 +551,7 @@
             if(type === 'PATIENT' && reason === 'MAX_DOLLAR') {
                 valid = true;
             } else {
-                errorMsg = 'For Reject 78 without PA, use PATIENT level and MAX DOLLAR reason.';
+                errorMsg = 'For Reject 78 (without PA), use PATIENT level and MAX DOLLAR reason (per CCO-3).';
             }
         }
         else if(rejectCode === 'R6') { // Mandatory Mail
@@ -540,13 +578,19 @@
         }
     }
 
-    // --- MHK LOGIC ---
+    // --- SYSTEM SWITCHING LOGIC ---
     function switchSystem(sys) {
-        if(sys === 'MHK') {
-            document.getElementById('tredium-view').classList.add('hidden');
-            document.getElementById('mhk-view').classList.remove('hidden');
-            document.getElementById('tab-tredium').classList.remove('active');
-            document.getElementById('tab-mhk').classList.add('active');
+        if(!isHipaaVerified) { alert("Access Denied: HIPAA Verification Required"); return; }
+        
+        const trediumView = document.getElementById('tredium-view');
+        const mhkView = document.getElementById('mhk-view');
+        
+        if(sys === 'TRED') {
+            trediumView.classList.remove('hidden');
+            mhkView.classList.add('hidden');
+        } else if(sys === 'MHK') {
+            mhkView.classList.remove('hidden');
+            trediumView.classList.add('hidden');
             
             // Auto-populate search field if a member is loaded
             if (currentMember) {
@@ -555,6 +599,7 @@
         }
     }
 
+    // --- MHK LOGIC ---
     function searchMhk() {
         // Simple search simulation
         const id = document.getElementById('mhkSearchId').value || (currentMember ? currentMember.name : ''); 
@@ -572,6 +617,13 @@
             document.getElementById('noCasesMsg').classList.remove('hidden');
         }
     }
+
+    // Set TRED as default view on load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initially hide Tredium and MHK views, will be shown after HIPAA
+        document.getElementById('tredium-view').classList.add('hidden');
+        document.getElementById('mhk-view').classList.add('hidden');
+    });
 </script>
 </body>
 </html>
